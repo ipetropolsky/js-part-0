@@ -29,10 +29,13 @@ const test = (whatWeTest, actualResult, expectedResult) => {
 
 const getType = (value) => {
     // Return string with a native JS type of value
+    return typeof value;
+
 }
 
 const getTypesOfItems = (arr) => {
     // Return array with types of items of given array
+
 }
 
 const allItemsHaveTheSameType = (arr) => {
@@ -48,6 +51,53 @@ const getRealType = (value) => {
     //     getRealType(NaN)        // 'NaN'
     // Use typeof, instanceof and some magic. It's enough to have
     // 12-13 unique types but you can find out in JS even more :)
+    let real_type = typeof value;
+
+    if (['boolean','string','function','undefined'].includes(real_type)) {
+        return real_type;
+    }
+    if (real_type === 'number') {
+        if (isNaN(value)) {
+            return 'NaN';
+        }
+        if(value > Number.MAX_VALUE){
+            return 'Infinity';
+        }
+        return real_type
+    }
+    if (real_type === 'object') {
+        let value2 = value + '';
+        if (value2 === 'null') {
+            return 'null';
+        }
+        let len='year';
+        try{
+            len=value.length;
+        }catch(error){}
+        if (len > -1){
+            return 'array';
+        }
+        try{
+            len = value.getYear();
+        }catch(error){}
+        if(typeof len == 'number'){
+            return 'date';
+        }
+        try{
+            len=''+value.exec("");
+        }catch(error){}
+        if(len == 'null'){
+            return 'regexp';
+        }
+        try{
+            len=value.size;
+        }catch(error){}
+        if(typeof len == 'number'){
+            return 'set';
+        }
+
+    }
+    return real_type;
 }
 
 const getRealTypesOfItems = (arr) => {
@@ -75,9 +125,26 @@ test('Number', getType(123), 'number');
 test('String', getType('whoo'), 'string');
 test('Array', getType([]), 'object');
 test('Object', getType({}), 'object');
-test('Function', getType(() => {}), 'function');
+test('Function', getType(() => { }), 'function');
 test('Undefined', getType(undefined), 'undefined');
 test('Null', getType(null), 'object');
+
+testBlock('getRealType'); //  Тестируем свои типы
+
+test('Boolean', getRealType(true), 'boolean');
+test('Number', getRealType(123), 'number');
+test('String', getRealType('whoo'), 'string');
+test('Array', getRealType([]), 'array');
+test('Object', getRealType({}), 'object');
+test('Function', getRealType(() => { }), 'function');
+test('Undefined', getRealType(undefined), 'undefined');
+test('Null', getRealType(null), 'null');
+test('NaN', getRealType('a' / 2), 'NaN');
+test('Infinity', getRealType(2 / 0), 'Infinity');
+test('Date', getRealType(new Date), 'date');
+test('Regexp', getRealType(/ab+c/), 'regexp');
+test('Set', getRealType(new Set([1,1,2])), 'set');
+
 
 testBlock('allItemsHaveTheSameType');
 
@@ -101,7 +168,7 @@ test(
 
 test(
     'Values like a number',
-    allItemsHaveTheSameType([123, 123/'a', 1/0]),
+    allItemsHaveTheSameType([123, 123 / 'a', 1 / 0]),
     // What the result?
 );
 
