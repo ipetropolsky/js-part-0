@@ -53,7 +53,7 @@ const getRealType = (value) => {
     // 12-13 unique types but you can find out in JS even more :)
     let real_type = typeof value;
 
-    if (['boolean','string','function','undefined'].includes(real_type)) {
+    if (['boolean','string','function','undefined','bigint'].includes(real_type)) {
         return real_type;
     }
     if (real_type === 'number') {
@@ -116,34 +116,47 @@ const countRealTypes = (arr) => {
 };
 
 
+standart_types = {  // Массив (объект) для провекри реальных типов
+    "boolean": true,
+    "number": 123,
+    "string": "whoo",
+    "array/object": [],
+    "object": {},
+    "function": () => { },
+    "undefined": undefined,
+    "null/object": null,
+}
+
+extended_types = Object.assign({}, standart_types, {
+    "array": [],
+    "null": null,
+    "NaN": "a" / 2,
+    "Infinity": 1 / 0,
+    "date": new Date,
+    "regexp": /ab+c/,
+    "set": new Set([1,1,2]),
+    "bigint": BigInt(1),
+});
+
+delete extended_types["array/object"];  // Это лишние для расширенных
+delete extended_types["null/object"];
+
+
+function array_fn_iteration (array, fn){  // Функция проверки всех типов
+    let params;  //  Массив параметров
+    for ( let key in array ) {  // Я знаю что эта запись не совсем корректна и совсем не в функциональном стиле
+        params = key.split("/"); // разбиваем ключ на пару
+        test(params[0][0].toUpperCase() + params[0].slice(1), fn(array[key]), params[1]?params[1]:params[0]);
+    }    
+}
+
 // Tests
 
-testBlock('getType');
+testBlock("getType");  // Тестируем встроенные типы
+array_fn_iteration (standart_types, getType);
 
-test('Boolean', getType(true), 'boolean');
-test('Number', getType(123), 'number');
-test('String', getType('whoo'), 'string');
-test('Array', getType([]), 'object');
-test('Object', getType({}), 'object');
-test('Function', getType(() => { }), 'function');
-test('Undefined', getType(undefined), 'undefined');
-test('Null', getType(null), 'object');
-
-testBlock('getRealType'); //  Тестируем свои типы
-
-test('Boolean', getRealType(true), 'boolean');
-test('Number', getRealType(123), 'number');
-test('String', getRealType('whoo'), 'string');
-test('Array', getRealType([]), 'array');
-test('Object', getRealType({}), 'object');
-test('Function', getRealType(() => { }), 'function');
-test('Undefined', getRealType(undefined), 'undefined');
-test('Null', getRealType(null), 'null');
-test('NaN', getRealType('a' / 2), 'NaN');
-test('Infinity', getRealType(2 / 0), 'Infinity');
-test('Date', getRealType(new Date), 'date');
-test('Regexp', getRealType(/ab+c/), 'regexp');
-test('Set', getRealType(new Set([1,1,2])), 'set');
+testBlock("getRealType"); //  Тестируем расширенные типы
+array_fn_iteration (extended_types, getRealType);
 
 
 testBlock('allItemsHaveTheSameType');
@@ -209,6 +222,7 @@ test(
         'date',
         'regexp',
         'set',
+        'bigint',
         // What else?
     ]
 );
