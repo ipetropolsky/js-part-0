@@ -40,9 +40,7 @@ const test = (whatWeTest, actualResult, expectedResult) => {
 
 const getType = (value) => typeof value;
 
-const getTypesOfItems = (arr) => {
-    // Return array with types of items of given array
-};
+const getTypesOfItems = (arr) => arr.map((item) => typeof item);
 
 const allItemsHaveTheSameType = (arr) => {
     // Return true if all items of array have the same type
@@ -113,17 +111,40 @@ test('Values like an object', allItemsHaveTheSameType([{}]), true);
 
 testBlock('getTypesOfItems VS getRealTypesOfItems');
 
-const knownTypes = [true, null, [], {}, '4, 8, 15, 16, 23, 42', 108, Infinity, 5 / 'aaa'];
+const customNaN = parseInt('Joker12', 10);
+
+const knownTypes = [
+    true,
+    108,
+    'Lost',
+    [4, 8, 15, 15, 23, 42],
+    { dharma: 'initiative' },
+    () => console.log('Не доверяйте Бэну'),
+    undefined,
+    null,
+    NaN,
+    Infinity,
+    new Date(),
+    /^[0-9]+/,
+    new Set(),
+    10n,
+];
 
 test('Check basic types', getTypesOfItems(knownTypes), [
     'boolean',
-    'object',
-    'object',
-    'object',
+    'number',
     'string',
+    'object',
+    'object',
+    'function',
+    'undefined',
+    'object',
     'number',
     'number',
-    'NaN',
+    'object',
+    'object',
+    'object',
+    'bigint',
 ]);
 
 test('Check real types', getRealTypesOfItems(knownTypes), [
@@ -140,7 +161,7 @@ test('Check real types', getRealTypesOfItems(knownTypes), [
     'date',
     'regexp',
     'set',
-    // What else?
+    'bigint',
 ]);
 
 testBlock('everyItemHasAUniqueRealType');
