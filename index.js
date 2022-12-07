@@ -6,9 +6,21 @@ const testBlock = (name) => {
 };
 
 const areEqual = (a, b) => {
+    if (a instanceof Array && b instanceof Array) {
+        if (a.length !== b.length) {
+            return false;
+        }
+
+        for (let i = 0; i < a.length; i++) {
+            if (!areEqual(a[i], b[i])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     return a === b;
-    // Compare arrays of primitives
-    // Remember: [] !== []
 };
 
 const test = (whatWeTest, actualResult, expectedResult) => {
@@ -26,9 +38,7 @@ const test = (whatWeTest, actualResult, expectedResult) => {
 
 // Functions
 
-const getType = (value) => {
-    // Return string with a native JS type of value
-};
+const getType = (value) => typeof value;
 
 const getTypesOfItems = (arr) => {
     // Return array with types of items of given array
@@ -103,12 +113,17 @@ test('Values like an object', allItemsHaveTheSameType([{}]), true);
 
 testBlock('getTypesOfItems VS getRealTypesOfItems');
 
-const knownTypes = [
-    // Add values of different types like boolean, object, date, NaN and so on
-];
+const knownTypes = [true, null, [], {}, '4, 8, 15, 16, 23, 42', 108, Infinity, 5 / 'aaa'];
 
 test('Check basic types', getTypesOfItems(knownTypes), [
-    // What the types?
+    'boolean',
+    'object',
+    'object',
+    'object',
+    'string',
+    'number',
+    'number',
+    'NaN',
 ]);
 
 test('Check real types', getRealTypesOfItems(knownTypes), [
