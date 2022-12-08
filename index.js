@@ -1,3 +1,34 @@
+
+
+const primitive_types = {  // Массив (объект) для провекри однозначных типов
+    boolean: true,
+    string: "whoo",
+    function: () => { },
+    undefined: undefined,
+    bigint: BigInt(1),
+}
+
+const standart_types = Object.assign({}, primitive_types, { // Стандартные типы (включают однозначные)
+    number: 123,
+    object: {},
+    "array/object": [],
+    "null/object": null,
+});
+
+const real_types = Object.assign({}, primitive_types, {  // Фактические типы (включают однозначные, но не все стандартные)
+    number: 123,
+    object: {},
+    array: [],
+    null: null,
+    NaN: "a" / 2,
+    Infinity: 1 / 0,
+    date: new Date,
+    regexp: /ab+c/,
+    set: new Set([1, 1, 2]),
+});
+
+
+
 // Test utils
 
 const testBlock = (name) => {
@@ -35,7 +66,11 @@ const getType = (value) => {
 
 const getTypesOfItems = (arr) => {
     // Return array with types of items of given array
-
+    let ret = [];
+    for (let key in arr) {
+        ret[key] = arr[key]
+    }
+    return ret;
 }
 
 const allItemsHaveTheSameType = (arr) => {
@@ -52,52 +87,49 @@ const getRealType = (value) => {
     // Use typeof, instanceof and some magic. It's enough to have
     // 12-13 unique types but you can find out in JS even more :)
     let real_type = typeof value;
-
-    if (['boolean','string','function','undefined','bigint'].includes(real_type)) {
+    if (real_type in primitive_types) { // Если тип однозначный то сразу вернём
         return real_type;
     }
-    if (real_type === 'number') {
-        if (isNaN(value)) {
-            return 'NaN';
-        }
-        if(value > Number.MAX_VALUE){
-            return 'Infinity';
-        }
-        return real_type
-    }
-    if (real_type === 'object') {
-        let value2 = value + '';
-        if (value2 === 'null') {
-            return 'null';
-        }
-        let len='year';
-        try{
-            len=value.length;
-        }catch(error){}
-        if (len > -1){
-            return 'array';
-        }
-        try{
-            len = value.getYear();
-        }catch(error){}
-        if(typeof len == 'number'){
-            return 'date';
-        }
-        try{
-            len=''+value.exec("");
-        }catch(error){}
-        if(len == 'null'){
-            return 'regexp';
-        }
-        try{
-            len=value.size;
-        }catch(error){}
-        if(typeof len == 'number'){
-            return 'set';
+
+    let subtypes = [null, null, null, null]; // Не знаю как правильно try функционально оформлять, в php это можно сразу вычислить в массив
+    try {
+        subtypes[0] = value.length;
+    } catch (error) { }
+    try {
+        subtypes[1] = value.getYear();
+    } catch (error) { }
+    try {
+        subtypes[2] = '' + value.exec("");
+    } catch (error) { }
+    try {
+        subtypes[3] = value.size;
+    } catch (error) { }
+
+    real_types_check = { // Локальный массив массивов для сверки дополнительных типов
+        number: {
+            NaN: isNaN(value),
+            Infinity: value > Number.MAX_VALUE,
+            number: true,
+        },
+        object: {
+            null: value + '' === 'null',
+            array: subtypes[0] > -1,
+            date: typeof subtypes[1] == 'number',
+            regexp: subtypes[2] == 'null',
+            set: typeof subtypes[3] == 'number'
         }
 
     }
-    return real_type;
+    if (real_type in real_types_check) {
+        for (let key in real_types_check[real_type]) {  // TODO  переделать на функциональщину
+            if (real_types_check[real_type][key]) {
+                return key;
+            }
+        }
+    }
+
+    return real_type; // Хоть чё-то вернём, может угадаем
+
 }
 
 const getRealTypesOfItems = (arr) => {
@@ -116,47 +148,25 @@ const countRealTypes = (arr) => {
 };
 
 
-standart_types = {  // Массив (объект) для провекри реальных типов
-    "boolean": true,
-    "number": 123,
-    "string": "whoo",
-    "array/object": [],
-    "object": {},
-    "function": () => { },
-    "undefined": undefined,
-    "null/object": null,
-}
-
-extended_types = Object.assign({}, standart_types, {
-    "array": [],
-    "null": null,
-    "NaN": "a" / 2,
-    "Infinity": 1 / 0,
-    "date": new Date,
-    "regexp": /ab+c/,
-    "set": new Set([1,1,2]),
-    "bigint": BigInt(1),
-});
-
-delete extended_types["array/object"];  // Это лишние для расширенных
-delete extended_types["null/object"];
 
 
-function array_fn_iteration (array, fn){  // Функция проверки всех типов
+
+
+function array_fn_iteration(arr, fn) {  // Функция проверки всех типов
     let params;  //  Массив параметров
-    for ( let key in array ) {  // Я знаю что эта запись не совсем корректна и совсем не в функциональном стиле
+    for (let key in arr) {  // Я знаю что эта запись не совсем корректна и совсем не в функциональном стиле
         params = key.split("/"); // разбиваем ключ на пару
-        test(params[0][0].toUpperCase() + params[0].slice(1), fn(array[key]), params[1]?params[1]:params[0]);
-    }    
+        test(params[0][0].toUpperCase() + params[0].slice(1), fn(arr[key]), params[1] ? params[1] : params[0]);
+    }
 }
 
 // Tests
 
 testBlock("getType");  // Тестируем встроенные типы
-array_fn_iteration (standart_types, getType);
+array_fn_iteration(standart_types, getType);
 
 testBlock("getRealType"); //  Тестируем расширенные типы
-array_fn_iteration (extended_types, getRealType);
+array_fn_iteration(real_types, getRealType);
 
 
 testBlock('allItemsHaveTheSameType');
