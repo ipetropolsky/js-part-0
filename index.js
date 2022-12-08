@@ -68,13 +68,17 @@ const getTypesOfItems = (arr) => {
     // Return array with types of items of given array
     let ret = [];
     for (let key in arr) {
-        ret[key] = arr[key]
+        ret[key] = getType(arr[key]);
     }
     return ret;
 }
 
 const allItemsHaveTheSameType = (arr) => {
     // Return true if all items of array have the same type
+    let types=countRealTypes(arr);
+    if( types.length==1 ) {return true;} // Типов 1 штука, значит совпало
+    if( types.length>1 ) {return false;} // Типов несколько - значит разные
+    return null; // Типов вообще нету (пустота на входе)
 };
 
 const getRealType = (value) => {
@@ -134,6 +138,11 @@ const getRealType = (value) => {
 
 const getRealTypesOfItems = (arr) => {
     // Return array with real types of items of given array
+    let ret = [];
+    for (let key in arr) {
+        ret[key] = getRealType(arr[key]);
+    }
+    return ret;
 };
 
 const everyItemHasAUniqueRealType = (arr) => {
@@ -145,6 +154,17 @@ const countRealTypes = (arr) => {
     // Return an array of arrays with a type and count of items
     // with this type in the input array, sorted by type.
     // Like an Object.entries() result: [['boolean', 3], ['string', 5]]
+    let type;
+    let ret = [];
+    for (let key in arr) {
+        type = getRealType(arr[key]);
+        ret[type] = type in ret ? ret[type] + 1 : 1;
+    }
+    let ret2 = [];
+    for (let key in ret) {
+        ret2.push([key, ret[key]]);
+    }
+    return ret2;
 };
 
 
@@ -168,6 +188,10 @@ array_fn_iteration(standart_types, getType);
 testBlock("getRealType"); //  Тестируем расширенные типы
 array_fn_iteration(real_types, getRealType);
 
+console.log(getTypesOfItems(standart_types)); // Тестируем стандартные типы
+
+
+console.log(countRealTypes([1,2,3,'4','5',[]]));
 
 testBlock('allItemsHaveTheSameType');
 
@@ -186,13 +210,13 @@ test(
 test(
     'All values are strings but wait',
     allItemsHaveTheSameType(['11', new String('12'), '13']),
-    // What the result?
+    false // What the result?
 );
 
 test(
     'Values like a number',
     allItemsHaveTheSameType([123, 123 / 'a', 1 / 0]),
-    // What the result?
+    false // What the result?
 );
 
 test(
