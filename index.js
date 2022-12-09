@@ -1,4 +1,9 @@
+/*
+Здесь большое примечание
 
+
+
+*/
 
 const primitive_types = {  // Массив (объект) для провекри однозначных типов
     boolean: true,
@@ -37,6 +42,13 @@ const testBlock = (name) => {
 }
 
 const areEqual = (a, b) => {
+    //console.log('**********',getRealType(a),getRealType(b));
+    if (getRealType(a) == 'array' && getRealType(b) == 'array') { // Если оба элемента массива то сравниваем поэлементно. И надеемся на одномерность
+        for (let key in a) {
+            return areEqual(a[key], b[key]);
+        }
+        return true;
+    }
     return a === b;
     // Compare arrays of primitives
     // Remember: [] !== []
@@ -75,9 +87,9 @@ const getTypesOfItems = (arr) => {
 
 const allItemsHaveTheSameType = (arr) => {
     // Return true if all items of array have the same type
-    let types=countRealTypes(arr);
-    if( types.length==1 ) {return true;} // Типов 1 штука, значит совпало
-    if( types.length>1 ) {return false;} // Типов несколько - значит разные
+    let types = countRealTypes(arr);
+    if (types.length == 1) { return true; } // Типов 1 штука, значит совпало
+    if (types.length > 1) { return false; } // Типов несколько - значит разные
     return null; // Типов вообще нету (пустота на входе)
 };
 
@@ -122,7 +134,6 @@ const getRealType = (value) => {
             regexp: subtypes[2] == 'null',
             set: typeof subtypes[3] == 'number'
         }
-
     }
     if (real_type in real_types_check) {
         for (let key in real_types_check[real_type]) {  // TODO  переделать на функциональщину
@@ -148,7 +159,10 @@ const getRealTypesOfItems = (arr) => {
 const everyItemHasAUniqueRealType = (arr) => {
     // Return true if there are no items in array
     // with the same real type
+    return countRealTypes(arr).length == arr.length;
 };
+
+
 
 const countRealTypes = (arr) => {
     // Return an array of arrays with a type and count of items
@@ -161,16 +175,13 @@ const countRealTypes = (arr) => {
         ret[type] = type in ret ? ret[type] + 1 : 1;
     }
     let ret2 = [];
-    for (let key in ret) {
-        ret2.push([key, ret[key]]);
+    for (let key in real_types) {  // Эта фиговина сортирует по типу (перебираем массив сначала)
+        if (ret[key]) {
+            ret2.push([key, ret[key]]);
+        }
     }
     return ret2;
 };
-
-
-
-
-
 
 function array_fn_iteration(arr, fn) {  // Функция проверки всех типов
     let params;  //  Массив параметров
@@ -182,16 +193,16 @@ function array_fn_iteration(arr, fn) {  // Функция проверки вс�
 
 // Tests
 
+
+
 testBlock("getType");  // Тестируем встроенные типы
 array_fn_iteration(standart_types, getType);
 
 testBlock("getRealType"); //  Тестируем расширенные типы
 array_fn_iteration(real_types, getRealType);
 
-console.log(getTypesOfItems(standart_types)); // Тестируем стандартные типы
-
-
-console.log(countRealTypes([1,2,3,'4','5',[]]));
+//console.log(getTypesOfItems(standart_types)); // Тестируем стандартные типы
+//console.log(countRealTypes([1,2,3,'4','5',[]])); // Тестируем расширенные типы
 
 testBlock('allItemsHaveTheSameType');
 
@@ -221,44 +232,45 @@ test(
 
 test(
     'Values like an object',
-    allItemsHaveTheSameType([{}/* , Add as many as possible */]),
+    allItemsHaveTheSameType([{}
+        // , Add as many as possible 
+    ]),
     true
 );
 
 testBlock('getTypesOfItems VS getRealTypesOfItems');
-
+/*
 const knownTypes = [
     // Add values of different types like boolean, object, date, NaN and so on
 ];
+//  knownTypes - переделал на переменную - так писать легче
+*/
+
+var knownTypes = []; // Значение типов
+var knownTypesNames = []; // Наименования этих типов
+for (key in primitive_types) { // Заполняем значения и наименования
+    knownTypes.push(primitive_types[key]);
+    knownTypesNames.push(key);
+}
 
 test(
     'Check basic types',
     getTypesOfItems(knownTypes),
-    [
-        // What the types?
-    ]
+    knownTypesNames
 );
+
+
+var knownTypes = []; // Значение типов
+var knownTypesNames = []; // Наименования этих типов
+for (key in real_types) { // Заполняем значения и наименования
+    knownTypes.push(real_types[key]);
+    knownTypesNames.push(key);
+}
 
 test(
     'Check real types',
     getRealTypesOfItems(knownTypes),
-    [
-        'boolean',
-        'number',
-        'string',
-        'array',
-        'object',
-        'function',
-        'undefined',
-        'null',
-        'NaN',
-        'Infinity',
-        'date',
-        'regexp',
-        'set',
-        'bigint',
-        // What else?
-    ]
+    knownTypesNames,
 );
 
 testBlock('everyItemHasAUniqueRealType');
@@ -290,8 +302,12 @@ test(
 );
 
 
+
 testBlock('countRealTypes');
 
+// В этой функции с последовательностью фигово: в реальной жизни порядок может поменятся
+// рекомендуется через объекты-массивы задавать такую фигню, например:
+//  { 'boolean':3,'null':1,'object':1 }
 test(
     'Count unique types of array items',
     countRealTypes([
