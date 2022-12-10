@@ -1,35 +1,57 @@
 /*
-Здесь большое примечание
+Примечание - пытаюсь использовать элементы декларативного программирования
+причина в плохом типе мышления - я портянку if/else плохо понимаю, а компактный массив - хорошо
 
+Для этой работы массивы хорошо подходят, т.к. тут часто используется одно и то же
+например  primitive_types  и real_types.
+Скорее всего можно было сделать лучше - не писать такое - "Null/object": null
+Но тесты проходят, поэтому не стал менять (я не очень понял задание - нужен Null в getType, нужно его опознавать отдельно и т.п.)
 
+Я знаю, что цикл in не рекомендуют к использованию for (let key in arr) - это плохо.
+Но с редукцией/фильтрами я делал только несколько примеров на питоне и не понимаю как их отлаживать на JS
 
+Исправления исходного кода - все типы сделал начинающиеся с большой буквы
+пришлось преределать исходный код.
+причина - наличие функции map - конфликт имён. вместо свойства map берётся функция map.
+свойства Map - нету и нормально работает.
+Можно было несколькими путями пойти но этот самый простой и наглядный.
+
+Ещё испрваление - const knownTypes на let
+я не понял как его переопределять (целиком)
+причина переопределения - я в переменную весь исходный список типов пихаю (мне не надо каждый тип по-отдельности писать)
+
+На текущем уровне изучения JS я лучше не смогу написать.
+Возможно нарушил штук 10 правил хорошего тона, но даже если я и вижу, что код не очень - я не знаю как написать красиво.
 */
 
+//  Разделение на 3 массива чисто синтаксическое - просто первый применяется дальше
+
 const primitive_types = {  // Массив (объект) для провекри однозначных типов
-    boolean: true,
-    string: "whoo",
-    function: () => { },
-    undefined: undefined,
-    bigint: BigInt(1),
+    Boolean: true,
+    String: "whoo",
+    Function: () => { },
+    Undefined: undefined,
+    Bigint: BigInt(1),
 }
 
 const standart_types = Object.assign({}, primitive_types, { // Стандартные типы (включают однозначные)
-    number: 123,
-    object: {},
-    "array/object": [],
-    "null/object": null,
+    Number: 123,
+    Object: {},
+    "Array/Object": [],
+    "Null/Object": null,
 });
 
 const real_types = Object.assign({}, primitive_types, {  // Фактические типы (включают однозначные, но не все стандартные)
-    number: 123,
-    object: {},
-    array: [],
-    null: null,
+    Null: null,
+    Number: 123,
     NaN: "a" / 2,
     Infinity: 1 / 0,
-    date: new Date,
-    regexp: /ab+c/,
-    set: new Set([1, 1, 2]),
+    Array: [],
+    Object: {},    
+    Date: new Date,
+    Regexp: /ab+c/,
+    Set: new Set([1, 1, 2]),
+    Map: new Map(),
 });
 
 
@@ -42,10 +64,13 @@ const testBlock = (name) => {
 }
 
 const areEqual = (a, b) => {
-    //console.log('**********',getRealType(a),getRealType(b));
-    if (getRealType(a) == 'array' && getRealType(b) == 'array') { // Если оба элемента массива то сравниваем поэлементно. И надеемся на одномерность
+    let typea=getRealType(a);
+    let typeb=getRealType(b);
+    if (typea == 'Array' && typeb == 'Array') { // Если оба элемента массива то сравниваем поэлементно
         for (let key in a) {
-            return areEqual(a[key], b[key]);
+            if(!areEqual(a[key], b[key])){ // Рекурсия для многомерности
+                return false
+            }; 
         }
         return true;
     }
@@ -72,7 +97,8 @@ const test = (whatWeTest, actualResult, expectedResult) => {
 
 const getType = (value) => {
     // Return string with a native JS type of value
-    return typeof value;
+    let type=typeof value;
+    return type.charAt(0).toUpperCase() + type.slice(1); // Первую букву - большой
 
 }
 
@@ -106,46 +132,14 @@ const getRealType = (value) => {
     if (real_type in primitive_types) { // Если тип однозначный то сразу вернём
         return real_type;
     }
-
-    let subtypes = [null, null, null, null]; // Не знаю как правильно try функционально оформлять, в php это можно сразу вычислить в массив
-    try {
-        subtypes[0] = value.length;
-    } catch (error) { }
-    try {
-        subtypes[1] = value.getYear();
-    } catch (error) { }
-    try {
-        subtypes[2] = '' + value.exec("");
-    } catch (error) { }
-    try {
-        subtypes[3] = value.size;
-    } catch (error) { }
-
-    real_types_check = { // Локальный массив массивов для сверки дополнительных типов
-        number: {
-            NaN: isNaN(value),
-            Infinity: value > Number.MAX_VALUE,
-            number: true,
-        },
-        object: {
-            null: value + '' === 'null',
-            array: subtypes[0] > -1,
-            date: typeof subtypes[1] == 'number',
-            regexp: subtypes[2] == 'null',
-            set: typeof subtypes[3] == 'number'
-        }
+    if (real_type == 'number') {// Для NaN и Infinity отдельный котёл, здесь с маленькой буквы number
+        if (isNaN(value)) return 'NaN';
+        if (value > Number.MAX_VALUE) return 'Infinity';
     }
-    if (real_type in real_types_check) {
-        for (let key in real_types_check[real_type]) {  // TODO  переделать на функциональщину
-            if (real_types_check[real_type][key]) {
-                return key;
-            }
-        }
-    }
-
-    return real_type; // Хоть чё-то вернём, может угадаем
-
+    real_type= {}.toString.call(value).slice(8, -1).toLowerCase(); // Секретная функция https://learn.javascript.ru/class-instanceof
+    return real_type.charAt(0).toUpperCase() + real_type.slice(1); // Первую букву - большой
 }
+
 
 const getRealTypesOfItems = (arr) => {
     // Return array with real types of items of given array
@@ -168,10 +162,9 @@ const countRealTypes = (arr) => {
     // Return an array of arrays with a type and count of items
     // with this type in the input array, sorted by type.
     // Like an Object.entries() result: [['boolean', 3], ['string', 5]]
-    let type;
     let ret = [];
     for (let key in arr) {
-        type = getRealType(arr[key]);
+        let type = getRealType(arr[key]);
         ret[type] = type in ret ? ret[type] + 1 : 1;
     }
     let ret2 = [];
@@ -201,9 +194,6 @@ array_fn_iteration(standart_types, getType);
 testBlock("getRealType"); //  Тестируем расширенные типы
 array_fn_iteration(real_types, getRealType);
 
-//console.log(getTypesOfItems(standart_types)); // Тестируем стандартные типы
-//console.log(countRealTypes([1,2,3,'4','5',[]])); // Тестируем расширенные типы
-
 testBlock('allItemsHaveTheSameType');
 
 test(
@@ -221,7 +211,7 @@ test(
 test(
     'All values are strings but wait',
     allItemsHaveTheSameType(['11', new String('12'), '13']),
-    false // What the result?
+    true // What the result?
 );
 
 test(
@@ -239,19 +229,13 @@ test(
 );
 
 testBlock('getTypesOfItems VS getRealTypesOfItems');
-/*
-const knownTypes = [
+
+let knownTypes = [  // Я не понял как коротко переопределять константу, поэтому сделал переменной
     // Add values of different types like boolean, object, date, NaN and so on
 ];
-//  knownTypes - переделал на переменную - так писать легче
-*/
 
-var knownTypes = []; // Значение типов
-var knownTypesNames = []; // Наименования этих типов
-for (key in primitive_types) { // Заполняем значения и наименования
-    knownTypes.push(primitive_types[key]);
-    knownTypesNames.push(key);
-}
+knownTypes = Object.values(primitive_types);
+knownTypesNames = Object.keys(primitive_types);
 
 test(
     'Check basic types',
@@ -259,13 +243,8 @@ test(
     knownTypesNames
 );
 
-
-var knownTypes = []; // Значение типов
-var knownTypesNames = []; // Наименования этих типов
-for (key in real_types) { // Заполняем значения и наименования
-    knownTypes.push(real_types[key]);
-    knownTypesNames.push(key);
-}
+knownTypes = Object.values(real_types);
+knownTypesNames = Object.keys(real_types);
 
 test(
     'Check real types',
@@ -307,7 +286,8 @@ testBlock('countRealTypes');
 
 // В этой функции с последовательностью фигово: в реальной жизни порядок может поменятся
 // рекомендуется через объекты-массивы задавать такую фигню, например:
-//  { 'boolean':3,'null':1,'object':1 }
+// { 'boolean':3,'null':1,'object':1 }
+// или через мапу, но мапа слишком многословная
 test(
     'Count unique types of array items',
     countRealTypes([
@@ -318,12 +298,13 @@ test(
         {},
     ]),
     [
-        ['boolean', 3],
-        ['null', 1],
-        ['object', 1],
+        ['Boolean', 3],
+        ['Null', 1],
+        ['Object', 1],
     ]
 );
 
+// А здесь случай наступил, о котором выше догадался.
 test(
     'Counted unique types are sorted',
     countRealTypes([
@@ -334,10 +315,27 @@ test(
         !!null,
     ]),
     [
-        ['boolean', 3],
-        ['null', 1],
-        ['object', 1],
+        ['Boolean', 3],
+        ['Null', 1],
+        ['Object', 1],
     ]
 );
 
 // Add several positive and negative tests
+
+
+test(
+    'Проверяем кол-во специфических типов',
+    countRealTypes([
+        new Map(),
+        {},        
+        new Map(),
+        new Set([1,2,3]),
+        {},        
+    ]),
+    [
+        ['Object', 2],
+        ['Set', 1],
+        ['Map', 2],
+    ]
+);
