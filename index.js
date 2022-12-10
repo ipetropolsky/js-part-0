@@ -16,7 +16,7 @@ const test = (whatWeTest, actualResult, expectedResult) => {
         console.log(`[OK] ${whatWeTest}\n`);
     } else {
         console.error(`[FAIL] ${whatWeTest}`);
-        console.debug('Expected:');
+        console.debug('Expect+ed:');
         console.debug(expectedResult);
         console.debug('Actual:');
         console.debug(actualResult);
@@ -27,18 +27,42 @@ const test = (whatWeTest, actualResult, expectedResult) => {
 // Functions
 
 const getType = (value) => {
+    return typeof value;
     // Return string with a native JS type of value
 };
 
 const getTypesOfItems = (arr) => {
+    return arr.map((item) => typeof item);
     // Return array with types of items of given array
 };
 
 const allItemsHaveTheSameType = (arr) => {
+    return arr.every((item) => typeof item === typeof arr[0]);
     // Return true if all items of array have the same type
 };
 
 const getRealType = (value) => {
+    if (value === null) {
+        return 'null';
+    } else if (typeof value === 'bigint') {
+        return 'bigint';
+    } else if (typeof value === 'symbol') {
+        return 'symbol';
+    } else if (value === undefined) {
+        return 'undefined';
+    } else if (typeof value === 'number' && isNaN(value)) {
+        return 'NaN';
+    } else if (value === null) {
+        return 'null';
+    } else if (typeof value === 'number') {
+        return 'number';
+    } else if (`${new Date(value)}` !== 'Invalid Date') {
+        return 'date';
+    } else if (value instanceof Array) {
+        return 'array';
+    } else if (value instanceof Object) {
+        return 'object';
+    }
     // Return string with a “real” type of value.
     // For example:
     //     typeof new Date()       // 'object'
@@ -48,7 +72,16 @@ const getRealType = (value) => {
     // Use typeof, instanceof and some magic. It's enough to have
     // 12-13 unique types but you can find out in JS even more :)
 };
-
+console.log(getRealType(new Date()));
+console.log(getRealType({}));
+console.log(getRealType([]));
+console.log(getRealType(NaN));
+let a;
+console.log(getRealType(a));
+console.log(getRealType(null));
+console.log(getRealType(1n));
+console.log(getRealType(1));
+console.log(getRealType(Symbol('rgr')));
 const getRealTypesOfItems = (arr) => {
     // Return array with real types of items of given array
 };
