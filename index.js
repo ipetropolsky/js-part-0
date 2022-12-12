@@ -7,15 +7,7 @@ const testBlock = (name) => {
 const arraysEqual = (a, b) => {
     return a.length === b.length && a.every((el, ix) => el === b[ix]);
 };
-const setToArray = (setVar) => {
-    const arrayResult = [];
 
-    const element = (val1) => {
-        arrayResult.push(val1);
-    };
-    setVar.forEach(element);
-    return arrayResult;
-};
 const areEqual = (a, b) => {
     const flagA = Array.isArray(a);
     const flagB = Array.isArray(b);
@@ -107,12 +99,15 @@ const allItemsHaveTheSameType = (arr) => {
     const typeForElement = (value) => {
         return getRealType(value);
     };
-    const getRealTypeElement = setToArray(new Set(arr.map(typeForElement)));
-    if (getRealTypeElement.length === 1) {
+    const realTypeElement = new Set(arr.map(typeForElement));
+    if (realTypeElement.size === 1) {
         return true;
     }
-    if (getRealTypeElement.length === 2) {
-        if (getRealTypeElement[0].toLowerCase() === getRealTypeElement[1].toLowerCase()) {
+    if (realTypeElement.size === 2) {
+        const iterator = realTypeElement.values();
+        const valueFr = iterator.next().value;
+        const valueSc = iterator.next().value;
+        if (valueFr.toLowerCase() === valueSc.toLowerCase()) {
             return false;
         }
     }
@@ -137,12 +132,13 @@ const everyItemHasAUniqueRealType = (arr) => {
 
 const countRealTypes = (arr) => {
     const realTypeItem = getRealTypesOfItems(arr);
-    const uniqueItems = setToArray(new Set(getRealTypesOfItems(arr)));
-    const typeForElement = (value) => {
-        return [value, realTypeItem.filter((x) => x === value).length];
+    const uniqueItems = new Set(getRealTypesOfItems(arr));
+    const arrayResult = [];
+    const element = (value) => {
+        arrayResult.push([value, realTypeItem.filter((x) => x === value).length]);
     };
-    return uniqueItems.map(typeForElement);
-
+    uniqueItems.forEach(element);
+    return arrayResult;
     // Return an array of arrays with a type and count of items
     // with this type in the input array, sorted by type.
     // Like an Object.entries() result: [['boolean', 3], ['string', 5]]
