@@ -75,11 +75,15 @@ const getRealType = (value) => {
             return Symbol;
         } else if (value === null) {
             return 'null';
+        } else if (value instanceof RegExp) {
+            return 'RegExp';
         }
         return 'object';
     } else if (typeof value === 'number') {
         if (isNaN(value) === true) {
-            return 'Number';
+            return 'NaN';
+        } else if (value === Infinity) {
+            return 'Infinity';
         }
         return 'number';
     }
@@ -179,12 +183,15 @@ const knownTypes = [
     5 > 3,
     324,
     'Hello',
-    new String('Hello'),
     [],
     {},
     function v() {},
-    null,
     undefined,
+    null,
+    NaN,
+    Infinity,
+    new Date(),
+    new RegExp(''),
     new Set(),
     new Boolean(),
     Symbol('Hi'),
@@ -197,10 +204,13 @@ test('Check basic types', getTypesOfItems(knownTypes), [
     'string',
     'object',
     'object',
-    'object',
     'function',
-    'object',
     'undefined',
+    'object',
+    'number',
+    'number',
+    'object',
+    'object',
     'object',
     'object',
     'symbol',
@@ -210,12 +220,15 @@ test('Check real types', getRealTypesOfItems(knownTypes), [
     'boolean',
     'number',
     'string',
-    'String',
     'Array',
     'object',
     'function',
-    'null',
     'undefined',
+    'null',
+    'NaN',
+    'Infinity',
+    'Date',
+    'RegExp',
     'Set',
     'Boolean',
     'symbol',
