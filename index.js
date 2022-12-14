@@ -258,3 +258,4 @@ test('Counted unique types are sorted', countRealTypes([{}, null, true, !null, !
 ]);
 
 // Add several positive and negative tests
+// Just test
